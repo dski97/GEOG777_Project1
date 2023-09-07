@@ -21,19 +21,49 @@ well_nitrate = arcpy.Describe(well_nitrate_path).catalogPath
 # Print a message to console for debugging
 print("Working")
 
-# Define the function to execute the main analysis
+# Define the function to calculate ICW
 def execute_analysis():
     # Get the value of k from the Tkinter slider
     k_value = k_slider.get()
     
     # Perform IDW interpolation on well nitrate data using the selected k value
-    outIDW = Idw(well_nitrate, "nitr_ran", power=k_value)
+    outIDW = Idw(well_nitrate, "nitr_ran", cell_size= 0.00161631928, power=k_value)
     
     # Save the IDW output to a TIFF file
     outIDW.save(r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\idw_nitrate.tif")
     
     #Raster
-    messagebox.showinfo("Completion", "All set, analysis executed successfully.")
+    messagebox.showinfo("Completion", "IDF Nitrate Raster Complete")
+
+    # Perform a zonal statistics analysis on the cancer tracts using the IDW output
+    outZSaT = ZonalStatisticsAsTable(cancer_tracts, "GEOID10", outIDW, r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\zonal_stats.dbf", "DATA", "MEAN")
+
+    # Print a message to console for debugging
+    print("Zonal Statistics Complete")
+
+    # Join the zonal statistics table to the cancer tracts shapefile
+    arcpy.JoinField_management(cancer_tracts, "GEOID10", outZSaT, "GEOID10", "MEAN")
+
+    # Print a message to console for debugging
+    print("Join Complete")
+
+    #Export the cancer tracts shapefile to a new shapefile
+    arcpy.FeatureClassToFeatureClass_conversion(cancer_tracts, r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs", "cancer_tracts_analysis.shp")
+
+    # Print a message to console for debugging
+    print("Export Complete")
+
+ # Complete an OLS regression analysis on the cancer tracts shapefile
+    arcpy.stats.OrdinaryLeastSquares(
+        Input_Feature_Class=r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\cancer_tracts_analysis.shp",
+        Input_Feature_Class_ID_Field="GEOID10", 
+        Output_Feature_Class=r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\ols_analysis.shp",
+        Dependent_Variable="canrate",
+        Explanatory_Variables=["MEAN"])
+    
+    # Print a message to console for debugging
+    print("OLS Complete")
+
 
 # Initialize the Tkinter GUI window
 root = tk.Tk()
