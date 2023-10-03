@@ -10,6 +10,7 @@ import glob
 import shutil
 import os
 
+
 # Check out the required ArcGIS extension for spatial analysis
 arcpy.CheckOutExtension("Spatial")
 
@@ -18,21 +19,21 @@ arcpy.env.overwriteOutput = True
 
 #Function to update ArcGIS Pro Layers
 def export_layouts_to_pdf():
-    project_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Project1\Project1.aprx"
+    project_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Project1\Project1.aprx"
     project = arcpy.mp.ArcGISProject(project_path)
 
     # Loop through all the layouts and export each one to PDF
     for lyt in project.listLayouts():
         if lyt.name == "IDW":
-            pdf_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\idw_layout.pdf"
+            pdf_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\idw_layout.pdf"
             lyt.exportToPDF(pdf_path)
         elif lyt.name == "OLS":
-            pdf_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\ols_layout.pdf"
+            pdf_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\ols_layout.pdf"
             lyt.exportToPDF(pdf_path)
 
 # Define paths to the shapefiles for cancer tracts and well nitrate levels
-cancer_tracts_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\shapefiles\cancer_tracts.shp"
-well_nitrate_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\shapefiles\well_nitrate.shp"
+cancer_tracts_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\shapefiles\cancer_tracts.shp"
+well_nitrate_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\shapefiles\well_nitrate.shp"
 
 # Load the shapefiles using ArcPy's Describe function
 cancer_tracts = arcpy.Describe(cancer_tracts_path).catalogPath
@@ -50,10 +51,10 @@ def execute_analysis():
     outIDW = Idw(well_nitrate, "nitr_ran", cell_size= 0.00161631928, power=k_value)
     
     # Save the IDW output to a TIFF file
-    outIDW.save(r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\idw_nitrate.tif")
+    outIDW.save(r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\idw_nitrate.tif")
     
     # Perform a zonal statistics analysis on the cancer tracts using the IDW output
-    outZSaT = ZonalStatisticsAsTable(cancer_tracts, "GEOID10", outIDW, r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\zonal_stats.dbf", "DATA", "MEAN")
+    outZSaT = ZonalStatisticsAsTable(cancer_tracts, "GEOID10", outIDW, r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\zonal_stats.dbf", "DATA", "MEAN")
 
     # Print a message to console for debugging
     print("Zonal Statistics Complete")
@@ -80,26 +81,26 @@ def execute_analysis():
     print("Join Complete")
 
     #Export the cancer tracts shapefile to a new shapefile
-    arcpy.FeatureClassToFeatureClass_conversion(cancer_tracts, r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs", "cancer_tracts_analysis.shp")
+    arcpy.FeatureClassToFeatureClass_conversion(cancer_tracts, r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs", "cancer_tracts_analysis.shp")
 
     # Print a message to console for debugging
     print("Export Complete")
 
  # Complete an OLS regression analysis on the cancer tracts shapefile
     arcpy.stats.OrdinaryLeastSquares(
-        Input_Feature_Class=r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\cancer_tracts_analysis.shp",
+        Input_Feature_Class=r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\cancer_tracts_analysis.shp",
         Unique_ID_Field="unique",
-        Output_Feature_Class=r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\ols_analysis.shp",
+        Output_Feature_Class=r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\ols_analysis.shp",
         Dependent_Variable="canrate",
         Explanatory_Variables=["MEAN"],
-        Output_Report_File=r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\ols_report.pdf")
+        Output_Report_File=r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\ols_report.pdf")
     
      # Print a message to console for debugging
     print("OLS Complete")
 
  # Complete a Spatial Autocorrelation analysis on the cancer tracts shapefile and export a html report
     arcpy.stats.SpatialAutocorrelation(
-        Input_Feature_Class=r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\ols_analysis.shp",
+        Input_Feature_Class=r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\ols_analysis.shp",
         Input_Field="Residual",
         Generate_Report="GENERATE_REPORT",
         Conceptualization_of_Spatial_Relationships="INVERSE_DISTANCE",
@@ -112,17 +113,17 @@ def execute_analysis():
     print("Morans I Complete")
 
     # Remove any existing Moran's I reports in the output folder
-    existing_reports = glob.glob(r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\MoransI_Result*.html")
+    existing_reports = glob.glob(r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\MoransI_Result*.html")
     for report in existing_reports:
         os.remove(report)
 
      # Search for the most recently created Moran's I HTML report in the Temp directory
-    search_path = r"C:\Users\Dominic\AppData\Local\Temp\MoransI_Result_*.html"
+    search_path = r"C:\Users\cwalinskid\AppData\Local\Temp\MoransI_Result_*.html"
     list_of_files = glob.glob(search_path)
     latest_file = max(list_of_files, key=lambda x: os.path.getctime(x))
 
     # Define the destination path for the HTML report
-    dest_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs"
+    dest_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs"
 
     # Move the HTML report to the desired output folder
     shutil.move(latest_file, dest_path)
@@ -131,17 +132,18 @@ def execute_analysis():
     export_layouts_to_pdf()
 
 
+
 # Initialize the Tkinter GUI window
 root = tk.Tk()
 root.title("Nitrate and Cancer Analysis")
 
 # Create a Tkinter slider to select the k value for IDW interpolation
-k_slider = tk.Scale(root, from_=2, to=10, orient='horizontal', label='Choose k value')
-k_slider.pack()
+k_slider = tk.Scale(root, from_=2, to=10, orient='horizontal', label='Choose k value for IDW interpolation', bg='blue', fg='white', troughcolor='black', length=400)
+k_slider.pack(pady=20)
 
 
 # Map display
-image_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\BaseMap.png"
+image_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\BaseMap.png"
 original_img = Image.open(image_path)
 # Resize the image
 width, height = original_img.size
@@ -156,8 +158,8 @@ map_label = tk.Label(root, image=img)
 map_label.pack()
 
 # Create a Tkinter button that will execute the analysis when clicked
-execute_button = tk.Button(root, text="Execute Analysis", command=execute_analysis)
-execute_button.pack()
+execute_button = tk.Button(root, text="Run Analysis", bg='green', fg= 'white', command=execute_analysis, padx=50, pady=20)
+execute_button.pack(pady=20)
 
 # Start the Tkinter event loop
 root.mainloop()
