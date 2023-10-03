@@ -131,6 +131,9 @@ def execute_analysis():
     #Export layouts to PDF
     export_layouts_to_pdf()
 
+      # Display a pop-up message indicating that the analysis is complete
+    messagebox.showinfo("Analysis Complete", "The analysis has been successfully completed!")
+
 
 
 # Initialize the Tkinter GUI window
