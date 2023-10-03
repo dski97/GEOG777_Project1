@@ -3,7 +3,12 @@ import arcpy
 import tkinter as tk
 from arcpy.sa import *
 from tkinter import messagebox
-
+import tkinter.ttk as ttk
+from PIL import ImageTk, Image
+import subprocess
+import glob
+import shutil
+import os
 
 # Check out the required ArcGIS extension for spatial analysis
 arcpy.CheckOutExtension("Spatial")
@@ -89,8 +94,38 @@ def execute_analysis():
         Explanatory_Variables=["MEAN"],
         Output_Report_File=r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\ols_report.pdf")
     
-    # Print a message to console for debugging
+     # Print a message to console for debugging
     print("OLS Complete")
+
+ # Complete a Spatial Autocorrelation analysis on the cancer tracts shapefile and export a html report
+    arcpy.stats.SpatialAutocorrelation(
+        Input_Feature_Class=r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\ols_analysis.shp",
+        Input_Field="Residual",
+        Generate_Report="GENERATE_REPORT",
+        Conceptualization_of_Spatial_Relationships="INVERSE_DISTANCE",
+        Distance_Method="EUCLIDEAN_DISTANCE",
+        Standardization="ROW",
+        )
+
+
+    # Print a message to console for debugging
+    print("Morans I Complete")
+
+    # Remove any existing Moran's I reports in the output folder
+    existing_reports = glob.glob(r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\MoransI_Result*.html")
+    for report in existing_reports:
+        os.remove(report)
+
+     # Search for the most recently created Moran's I HTML report in the Temp directory
+    search_path = r"C:\Users\Dominic\AppData\Local\Temp\MoransI_Result_*.html"
+    list_of_files = glob.glob(search_path)
+    latest_file = max(list_of_files, key=lambda x: os.path.getctime(x))
+
+    # Define the destination path for the HTML report
+    dest_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs"
+
+    # Move the HTML report to the desired output folder
+    shutil.move(latest_file, dest_path)
 
     #Export layouts to PDF
     export_layouts_to_pdf()
@@ -101,8 +136,24 @@ root = tk.Tk()
 root.title("Nitrate and Cancer Analysis")
 
 # Create a Tkinter slider to select the k value for IDW interpolation
-k_slider = tk.Scale(root, from_=1, to=10, orient='horizontal', label='Choose k value')
+k_slider = tk.Scale(root, from_=2, to=10, orient='horizontal', label='Choose k value')
 k_slider.pack()
+
+
+# Map display
+image_path = r"C:\Users\Dominic\Desktop\GEOG777_Project1\Outputs\BaseMap.png"
+original_img = Image.open(image_path)
+# Resize the image
+width, height = original_img.size
+new_width = int(width * 0.18)
+new_height = int(height * 0.18)
+resized_img = original_img.resize((new_width, new_height), Image.ANTIALIAS)
+
+# Convert to a format that Tkinter understands
+img = ImageTk.PhotoImage(resized_img)
+
+map_label = tk.Label(root, image=img)
+map_label.pack()
 
 # Create a Tkinter button that will execute the analysis when clicked
 execute_button = tk.Button(root, text="Execute Analysis", command=execute_analysis)
