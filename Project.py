@@ -17,10 +17,21 @@ arcpy.CheckOutExtension("Spatial")
 # Enable overwriting of output files
 arcpy.env.overwriteOutput = True
 
-#Function to update ArcGIS Pro Layers
+# Define the function to export layouts to PDF
 def export_layouts_to_pdf():
     project_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Project1\Project1.aprx"
     project = arcpy.mp.ArcGISProject(project_path)
+
+    # Loop through all the maps in the project
+    for map in project.listMaps():
+        # Loop through each layer in the map
+        for lyr in map.listLayers():
+            # Check and rename the IDW layer
+            if lyr.name.lower() == "idw":
+                lyr.name = "Nitrate Concentration Map"
+            # Check and rename the OLS layer
+            elif lyr.name.lower() == "ols_analysis":
+                lyr.name = "Cancer Rate Regression Analysis"
 
     # Loop through all the layouts and export each one to PDF
     for lyt in project.listLayouts():
@@ -31,6 +42,8 @@ def export_layouts_to_pdf():
             pdf_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\Outputs\ols_layout.pdf"
             lyt.exportToPDF(pdf_path)
 
+    # Save the project after renaming layers
+    project.save()
 # Define paths to the shapefiles for cancer tracts and well nitrate levels
 cancer_tracts_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\shapefiles\cancer_tracts.shp"
 well_nitrate_path = r"C:\Users\cwalinskid\Desktop\reps\GEOG777_Project1\shapefiles\well_nitrate.shp"
@@ -41,6 +54,7 @@ well_nitrate = arcpy.Describe(well_nitrate_path).catalogPath
 
 # Print a message to console for debugging
 print("Working")
+
 
 # Define the function to calculate ICW
 def execute_analysis():
@@ -141,7 +155,9 @@ root = tk.Tk()
 root.title("Nitrate and Cancer Analysis")
 
 # Create a Tkinter slider to select the k value for IDW interpolation
-k_slider = tk.Scale(root, from_=2, to=10, orient='horizontal', label='Choose k value for IDW interpolation', bg='blue', fg='white', troughcolor='black', length=400)
+k_slider = tk.Scale(root, from_=1, to=10.0, resolution=0.1, orient='horizontal', 
+                    label='Choose k value for IDW interpolation', bg='blue', 
+                    fg='white', troughcolor='black', length=400)
 k_slider.pack(pady=20)
 
 
@@ -163,6 +179,21 @@ map_label.pack()
 # Create a Tkinter button that will execute the analysis when clicked
 execute_button = tk.Button(root, text="Run Analysis", bg='green', fg= 'white', command=execute_analysis, padx=50, pady=20)
 execute_button.pack(pady=20)
+
+# Define the function to display information about the tool
+def show_info():
+    info_message = "Welcome to the Nitrate and Cancer Analysis Tool!\n\n" \
+                   "How to use:\n" \
+                   "- Adjust the k value for IDW interpolation using the slider.\n" \
+                   "- Click 'Run Analysis' to perform the geospatial analysis.\n" \
+                   "- View the results in the specified output directory.\n\n" \
+                   "This tool helps in analyzing the relationship between nitrate levels in wells and cancer rates."
+    messagebox.showinfo("How to Use", info_message)
+
+# Create a Tkinter button that will display information about the tool when clicked
+info_button = tk.Button(root, text="How to Use", bg='yellow', fg='black', command=show_info, padx=10, pady=5)
+info_button.pack(pady=10)
+
 
 # Start the Tkinter event loop
 root.mainloop()
